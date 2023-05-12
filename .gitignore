@@ -7,3 +7,5 @@ scripts/python/*.pyc
 
 translation-update
 *.exe
+*.md
+*.log
