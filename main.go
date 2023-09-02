@@ -1,13 +1,19 @@
 package main
 
 import (
+	"bytes"
+	"errors"
 	"flag"
+	"fmt"
 	"io"
 	"log"
 	"os"
+	"path"
 	"strings"
 
+	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
+	"github.com/yuin/goldmark/text"
 )
 
 var (
@@ -57,8 +63,31 @@ func MakeFilename(input string) string {
 	return r.Replace(input)
 }
 
-func FilterHeadings(nodes []ast.Node) (headings []*ast.Heading) {
-	headings = make([]*ast.Heading, 0)
+func MakeDocument(blob []byte) (ast.Node, error) {
+	p := goldmark.DefaultParser()
+	doc := p.Parse(text.NewReader(blob))
+	if doc == nil {
+		return nil, errors.New("failed to parse document")
+	} else if doc.Type() != ast.TypeDocument {
+		return nil, errors.New("parse result is not a document")
+	}
+	return doc, nil
+}
+
+func MakeNodeSequence(blob []byte) ([]ast.Node, error) {
+	doc, err := MakeDocument(blob)
+	if err != nil {
+		return nil, err
+	}
+	sequence := make([]ast.Node, 0)
+	for node := doc.FirstChild(); node != nil; node = node.NextSibling() {
+		sequence = append(sequence, node)
+	}
+	return sequence, nil
+}
+
+func FilterHeadings(nodes []ast.Node, headings chan<- *ast.Heading, maxLevel int) {
+	defer close(headings)
 	for _, node := range nodes {
 		if node.Type() != ast.TypeBlock {
 			continue
@@ -66,11 +95,37 @@ func FilterHeadings(nodes []ast.Node) (headings []*ast.Heading) {
 		switch node.Kind() {
 		case ast.KindHeading:
 			var p interface{} = node
-			head := p.(*ast.Heading)
-			headings = append(headings, head)
+			heading := p.(*ast.Heading)
+			if heading.Level <= maxLevel {
+				headings <- heading
+			}
 		}
 	}
-	return
+}
+
+func SaveSections(fullText []byte, nodes []ast.Node, folder string) error {
+	headings := make(chan *ast.Heading)
+
+	// When the end of "Heading 1" or "Heading 2" reached,
+	// slice the raw text 'pos' and save to the file
+	go FilterHeadings(nodes, headings, 2)
+	var pos int = 0
+	var saveTitle string = "empty"
+
+	for head := range headings {
+		segment := head.Lines().At(0)
+		title := DropHTML(string(fullText[segment.Start:segment.Stop]))
+		filename := fmt.Sprint(MakeFilename(saveTitle), ".md")
+		log.Println(filename)
+
+		cutidx := segment.Start - head.Level - 1
+		if err := SaveBlobToFile(fullText[pos:cutidx], path.Join(folder, filename)); err != nil {
+			return err
+		}
+		pos = cutidx
+		saveTitle = title
+	}
+	return nil
 }
 
 func SaveToFile(rc io.ReadCloser, filename string) error {
@@ -82,4 +137,57 @@ func SaveToFile(rc io.ReadCloser, filename string) error {
 	defer fout.Close()
 	_, err = io.Copy(fout, rc)
 	return err
+}
+
+func SaveBlobToFile(blob []byte, path string) error {
+	fout, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer fout.Close()
+	_, err = fout.Write(blob)
+	return err
+}
+
+func MergeSegments(blob []byte, segments *text.Segments) []byte {
+	buf := new(bytes.Buffer)
+	for i := 0; i < segments.Len(); i += 1 {
+		segment := segments.At(i)
+		row := blob[segment.Start:segment.Stop]
+		buf.Write(row)
+	}
+	return buf.Bytes()
+}
+
+func DecorateCodeBlocks(blob []byte, writer io.Writer) error {
+	doc, err := MakeDocument(blob)
+	if err != nil {
+		return err
+	}
+	var pos int = 0
+	for node := doc.FirstChild(); node != nil; node = node.NextSibling() {
+		segments := node.Lines()
+		switch node.Kind() {
+		case ast.KindCodeBlock: // if code block, mark as C++ code
+			if segments == nil {
+				log.Println("no segment")
+				continue
+			}
+			block := MergeSegments(blob, segments)
+			writer.Write([]byte("\n```c++\n"))
+			writer.Write(block)
+			writer.Write([]byte("```"))
+			segment := segments.At(segments.Len() - 1)
+			pos = segment.Stop
+			continue
+		}
+		// bypass the other segments (and some gaps between previous segments)
+		for i := 0; i < segments.Len(); i += 1 {
+			segment := segments.At(i)
+			row := blob[pos:segment.Stop]
+			writer.Write(row)
+			pos = segment.Stop
+		}
+	}
+	return nil
 }
