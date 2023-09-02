@@ -159,13 +159,9 @@ func MergeSegments(blob []byte, segments *text.Segments) []byte {
 	return buf.Bytes()
 }
 
-func DecorateCodeBlocks(blob []byte, writer io.Writer) error {
-	doc, err := MakeDocument(blob)
-	if err != nil {
-		return err
-	}
+func DecorateCodeBlocks(blob []byte, nodes []ast.Node, writer io.Writer) error {
 	var pos int = 0
-	for node := doc.FirstChild(); node != nil; node = node.NextSibling() {
+	for _, node := range nodes {
 		segments := node.Lines()
 		switch node.Kind() {
 		case ast.KindCodeBlock: // if code block, mark as C++ code
@@ -174,12 +170,72 @@ func DecorateCodeBlocks(blob []byte, writer io.Writer) error {
 				continue
 			}
 			block := MergeSegments(blob, segments)
-			writer.Write([]byte("\n```c++\n"))
+			writer.Write([]byte("\n\n```c++\n"))
 			writer.Write(block)
-			writer.Write([]byte("```"))
+			writer.Write([]byte("```\n"))
 			segment := segments.At(segments.Len() - 1)
 			pos = segment.Stop
 			continue
+		}
+		// bypass the other segments (and some gaps between previous segments)
+		for i := 0; i < segments.Len(); i += 1 {
+			segment := segments.At(i)
+			row := blob[pos:segment.Stop]
+			writer.Write(row)
+			pos = segment.Stop
+		}
+	}
+	return nil
+}
+
+func MakeAdmonition(text string) (value string, indent bool) {
+	guessAdmonition := func() (string, bool) {
+		if strings.Contains(text, "Reason") {
+			return "info", true
+		}
+		if strings.Contains(text, "Example") {
+			if strings.Contains(text, ", good") {
+				return "success", false
+			}
+			if strings.Contains(text, ", bad") {
+				return "failure", false
+			}
+			return "example", false
+		}
+		if strings.Contains(text, "Enforcement") {
+			return "tip", true
+		}
+		if strings.Contains(text, "Discussion") {
+			return "quote", true
+		}
+		if strings.Contains(text, "Exception") {
+			return "warning", true
+		}
+		// "See", "See also", "Alternative" "Alternatives"
+		return "note", false
+	}
+	value, indent = guessAdmonition()
+	value = fmt.Sprintf("!!! %s \"%s\"", value, text)
+	return
+}
+
+func DecorateH5Examples(blob []byte, nodes []ast.Node, writer io.Writer) error {
+	var pos int = 0
+	for _, node := range nodes {
+		segments := node.Lines()
+		switch node.Kind() {
+		case ast.KindHeading:
+			heading := node.(*ast.Heading)
+			// mostly 5, but sometimes 4 (probably mistyped)
+			if heading.Level >= 4 {
+				segment := segments.At(0)
+				cutidx := segment.Start - heading.Level - 1
+				writer.Write(blob[pos:cutidx])
+				adomination, _ := MakeAdmonition(string(blob[segment.Start:segment.Stop]))
+				writer.Write([]byte(adomination))
+				pos = segment.Stop
+				continue
+			}
 		}
 		// bypass the other segments (and some gaps between previous segments)
 		for i := 0; i < segments.Len(); i += 1 {

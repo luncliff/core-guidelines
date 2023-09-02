@@ -69,13 +69,37 @@ func TestMarkdownChunking(t *testing.T) {
 func TestMarkdownDecorateCodeBlocks(t *testing.T) {
 	blob := readFile(t, filename)
 
-	fout, err := os.Create("CppCoreGuidelines.md")
+	nodes, err := MakeNodeSequence(blob)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fout, err := os.Create("cpp-1.md")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer fout.Close()
 
-	if err = DecorateCodeBlocks(blob, fout); err != nil {
+	if err = DecorateCodeBlocks(blob, nodes, fout); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestMarkdownH5Examples(t *testing.T) {
+	blob := readFile(t, filename)
+
+	nodes, err := MakeNodeSequence(blob)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fout, err := os.Create("cpp-2.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer fout.Close()
+
+	if err = DecorateH5Examples(blob, nodes, fout); err != nil {
 		t.Fatal(err)
 	}
 }
