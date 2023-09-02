@@ -1,0 +1,16 @@
+name: "Experiment(Upstream)"
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: 1.20
+      - name: "Run go get"
+        run: go get
+      - name: "Run go test"
+        run: go test -v

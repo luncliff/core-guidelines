@@ -2,28 +2,58 @@
 site_name: C++ 핵심 가이드라인
 site_description: "C++ 핵심 가이드라인 한글화 프로젝트"
 site_author: C++ Korea
-site_url: https://cppkorea.github.io/CppCoreGuidelines/
+site_url: https://luncliff.github.io/core-guidelines/
 
-repo_name: CppKorea/CppCoreGuidelines
-repo_url: https://github.com/CppKorea/CppCoreGuidelines
+repo_name: luncliff/CppCoreGuidelines
+repo_url: https://github.com/luncliff/core-guidelines
 
 copyright: "Copyright (c) Standard C++ Foundation and its contributors"
 
 
 markdown_extensions:
-  - codehilite:
-      guess_lang: false
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
 
+plugins:
+  - search:
+      lang: 
+        - en
+        - ko
+
+extra:
+  alternate:
+    - name: 한국어
+      link: /ko/
+      lang: ko
+    - name: English
+      link: /en/
+      lang: en
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/orgs/cppkorea
+    - icon: fontawesome/brands/discord
+      link: https://discord.gg/87SNegGZue
+    - icon: fontawesome/brands/facebook
+      link: https://facebook.com/groups/cppkorea
+    - icon: fontawesome/solid/paper-plane
+      link: mailto:contact@cppkorea.org
 
 theme:
   name: "material"
-  # language: "kr"
+  language: "ko"
   extra:
     search:
-      language: "en"
+      language: "ko"
   font:
     text: "Nanum Gothic"
     code: "Nanum Gothic Coding"
+  icon:
+    repo: fontawesome/brands/github
+    admonition:
+      tip: fontawesome/solid/gears
   palette:
     - scheme: default
       toggle:
@@ -35,8 +65,12 @@ theme:
       toggle:
         icon: material/weather-night
         name: Switch to dark mode
-  feature:
-    tabs: true
+  features:
+    - content.tabs.link
+    - search.suggest
+    - search.highlight
+    - navigation.path
+    - toc.integrate
   logo: "images/logo.svg"
 
 docs_dir: sections
