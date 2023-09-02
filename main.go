@@ -3,10 +3,10 @@ package main
 import (
 	"bytes"
 	"errors"
-	"flag"
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -16,29 +16,89 @@ import (
 	"github.com/yuin/goldmark/text"
 )
 
-var (
-	source  string
-	verbose bool
+const (
+	host     = "raw.githubusercontent.com"
+	filename = "CppCoreGuidelines.md"
 )
 
 func main() {
-	command := os.Args[1]
-	switch command {
-	case "sync":
-		flag.StringVar(&source, "source", "https://github.com/<org>/<repo>", "URL to download guideline markdown file")
-	case "help":
-		break
+	if _, err := os.Stat(filename); os.IsNotExist(err) {
+		source := fmt.Sprintf("https://%s/isocpp/CppCoreGuidelines/%s/%s", host, "master", filename)
+		log.Println("source:", source)
+		res, err := http.Get(source)
+		if err != nil {
+			log.Fatalln(err)
+			return
+		}
+		if err = SaveToFile(res.Body, filename); err != nil {
+			log.Fatalln(err)
+			return
+		}
 	}
-	flag.BoolVar(&verbose, "verbose", false, "Print more log messages")
-
-	os.Args = os.Args[1:]
-	if flag.Parse(); !flag.Parsed() {
-		log.Fatalln("os.Args parse failed")
-		os.Exit(1)
+	folder := path.Join("sections", "en")
+	if err := os.MkdirAll(folder, 0777); err != nil {
+		log.Fatalln(err)
+		return
 	}
 
-	log.Println("source:", source)
-	log.Println("verbose:", verbose)
+	rewrite1 := func(filename string) error {
+		blob, err := ReadFromFile(filename)
+		if err != nil {
+			return err
+		}
+		nodes, err := MakeNodeSequence(blob)
+		if err != nil {
+			return err
+		}
+		fout, err := os.Create(filename)
+		if err != nil {
+			return err
+		}
+		defer fout.Close()
+		return DecorateH5Examples(blob, nodes, fout)
+	}
+	if err := rewrite1(filename); err != nil {
+		log.Fatalln(err)
+		return
+	}
+
+	rewrite2 := func(filename string) error {
+		blob, err := ReadFromFile(filename)
+		if err != nil {
+			return err
+		}
+		nodes, err := MakeNodeSequence(blob)
+		if err != nil {
+			return err
+		}
+		fout, err := os.Create(filename)
+		if err != nil {
+			return err
+		}
+		defer fout.Close()
+		return DecorateCodeBlocks(blob, nodes, fout)
+	}
+	if err := rewrite2(filename); err != nil {
+		log.Fatalln(err)
+		return
+	}
+
+	splitToFolder := func(filename, folder string) error {
+		blob, err := ReadFromFile(filename)
+		if err != nil {
+			return err
+		}
+		nodes, err := MakeNodeSequence(blob)
+		if err != nil {
+			return err
+		}
+		return SaveSections(blob, nodes, folder)
+	}
+
+	if err := splitToFolder(filename, folder); err != nil {
+		log.Fatalln(err)
+		return
+	}
 }
 
 // Discard <a></a> HTML tag
@@ -103,6 +163,14 @@ func FilterHeadings(nodes []ast.Node, headings chan<- *ast.Heading, maxLevel int
 	}
 }
 
+func GetShortTitle(title string) (string, bool) {
+	idx := strings.Index(title, ": ")
+	if idx == -1 {
+		return title, false
+	}
+	return title[:idx], true
+}
+
 func SaveSections(fullText []byte, nodes []ast.Node, folder string) error {
 	headings := make(chan *ast.Heading)
 
@@ -116,16 +184,28 @@ func SaveSections(fullText []byte, nodes []ast.Node, folder string) error {
 		segment := head.Lines().At(0)
 		title := DropHTML(string(fullText[segment.Start:segment.Stop]))
 		filename := fmt.Sprint(MakeFilename(saveTitle), ".md")
-		log.Println(filename)
+		if shorten, found := GetShortTitle(saveTitle); found {
+			log.Println(shorten, ":", path.Join(folder, filename))
+		}
 
 		cutidx := segment.Start - head.Level - 1
 		if err := SaveBlobToFile(fullText[pos:cutidx], path.Join(folder, filename)); err != nil {
+			log.Println(err)
 			return err
 		}
 		pos = cutidx
 		saveTitle = title
 	}
 	return nil
+}
+
+func ReadFromFile(filename string) ([]byte, error) {
+	fin, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	defer fin.Close()
+	return io.ReadAll(fin)
 }
 
 func SaveToFile(rc io.ReadCloser, filename string) error {

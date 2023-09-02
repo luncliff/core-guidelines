@@ -2,17 +2,11 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"os"
 	"path"
 	"testing"
-)
-
-const (
-	host     = "raw.githubusercontent.com"
-	filename = "CppCoreGuidelines.md"
 )
 
 func init() {
@@ -31,21 +25,11 @@ func init() {
 	}
 }
 
-func readFile(t *testing.T, filename string) []byte {
-	fin, err := os.Open(filename)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer fin.Close()
-	blob, err := io.ReadAll(fin)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return blob
-}
-
 func TestMarkdownChunking(t *testing.T) {
-	blob := readFile(t, filename)
+	blob, err := ReadFromFile(filename)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	folder := path.Join("sections", "en")
 	if err := os.RemoveAll(folder); err != nil {
@@ -67,7 +51,10 @@ func TestMarkdownChunking(t *testing.T) {
 }
 
 func TestMarkdownDecorateCodeBlocks(t *testing.T) {
-	blob := readFile(t, filename)
+	blob, err := ReadFromFile(filename)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	nodes, err := MakeNodeSequence(blob)
 	if err != nil {
@@ -86,7 +73,10 @@ func TestMarkdownDecorateCodeBlocks(t *testing.T) {
 }
 
 func TestMarkdownH5Examples(t *testing.T) {
-	blob := readFile(t, filename)
+	blob, err := ReadFromFile(filename)
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	nodes, err := MakeNodeSequence(blob)
 	if err != nil {
