@@ -24,13 +24,13 @@ plugins:
         - ko
 
 extra:
-  alternate:
-    - name: 한국어
-      link: /ko/
-      lang: ko
-    - name: English
-      link: /en/
-      lang: en
+  # alternate:
+  #   - name: 한국어
+  #     link: core-guidelines/ko/
+  #     lang: ko
+  #   - name: English
+  #     link: core-guidelines/en/
+  #     lang: en
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/orgs/cppkorea
