@@ -1,0 +1,102 @@
+# C++ Core Guidelines table of contents
+
+- Abstract: `s-abstract`
+- In: Introduction: `s-introduction`
+  - Target readership: `ss-readers`
+  - Aims: `ss-aims`
+  - Non-aims: `ss-non`
+  - Enforcement: `ss-force`
+  - The structure of this document: `ss-struct`
+  - Major sections: `ss-sec`
+- P: Philosophy: `s-philosophy`
+- I: Interfaces: `s-interfaces`
+- F: Functions: `s-functions`
+  - Function definitions: `ss-fct-def`
+  - Parameter passing: `ss-call`
+- C: Classes and class hierarchies: `s-class`
+  - Concrete types: `ss-concrete`
+  - Constructors, assignments, and destructors: `s-ctor`
+    - Default operations: `ss-defop`
+    - Destructors: `ss-dtor`
+    - Constructors: `ss-ctor`
+    - Copy and move: `ss-copy`
+    - Other default operation rules: `cother-other-default-operation-rules`
+  - Containers and other resource handles: `ss-containers`
+  - Function objects and lambdas: `ss-lambdas`
+  - Class hierarchies (OOP): `ss-hier`
+    - Designing classes in a hierarchy: `chierclass-designing-classes-in-a-hierarchy`
+    - Accessing objects in a hierarchy: `chier-access-accessing-objects-in-a-hierarchy`
+  - Overloading and overloaded operators: `ss-overload`
+  - Unions: `ss-union`
+- Enum: Enumerations: `s-enum`
+- R: Resource management: `s-resource`
+  - Allocation and deallocation: `ss-alloc`
+  - Smart pointers: `ss-smart`
+- ES: Expressions and statements: `s-expr`
+  - Declarations: `esdcl-declarations`
+  - Expressions: `esexpr-expressions`
+  - Statements: `esstmt-statements`
+  - Arithmetic: `ss-numbers`
+- Per: Performance: `s-performance`
+- CP: Concurrency and parallelism: `s-concurrency`
+  - Concurrency: `sscp-con`
+  - Coroutines: `sscp-coro`
+  - Parallelism: `sscp-par`
+  - Message passing: `sscp-mess`
+  - Vectorization: `sscp-vec`
+  - Lock-free programming: `sscp-free`
+  - Etc. concurrency rules: `sscp-etc`
+- E: Error handling: `s-errors`
+- Con: Constants and immutability: `s-const`
+- T: Templates and generic programming: `s-templates`
+  - Generic programming: `ss-gp`
+  - Concept rules: `ss-concepts`
+    - Concept use: `ss-concept-use`
+    - Concept definition rules: `ss-concepts-def`
+  - Template interfaces: `ss-temp-interface`
+  - Template definitions: `ss-temp-def`
+  - Template and hierarchy rules: `ss-temp-hier`
+  - Variadic template rules: `ss-variadic`
+  - Template metaprogramming (TMP): `ss-meta`
+  - Other template rules: `ss-temp-other`
+- CPL: C-style programming: `s-cpl`
+- SF: Source files: `s-source`
+- SL: The Standard Library: `s-stdlib`
+  - Containers: `ss-con`
+  - String: `ss-string`
+  - Iostream: `ss-io`
+  - Regex: `ss-regex`
+  - Time: `ss-chrono`
+  - The C Standard Library: `ss-clib`
+- A: Architectural ideas: `s-a`
+- NR: Non-Rules and myths: `s-not`
+- RF: References: `s-references`
+  - Coding rules: `ss-rules`
+  - Books with coding guidelines: `ss-books`
+  - C++ programming: `ss-cplusplus`
+  - Websites: `ss-web`
+  - Videos about modern C++: `ss-vid`
+  - Manuals: `ss-man`
+  - Core Guidelines materials: `ss-core`
+  - Acknowledgements: `ss-ack`
+- Pro: Profiles: `s-profile`
+  - Type-safety profile: `ss-type`
+  - Bounds-safety profile: `ss-bounds`
+  - Lifetime-safety profile: `ss-lifetime`
+- GSL: Guidelines support library: `s-gsl`
+  - Views: `ss-views`
+  - Ownership pointers: `ss-ownership`
+  - Assertions: `ss-assertions`
+  - Utilities: `ss-utilities`
+  - Concepts: `ss-gsl-concepts`
+  - Smart pointer concepts: `ss-gsl-smartptrconcepts`
+- NL: Naming and layout suggestions: `s-naming`
+- FAQ: Answers to frequently asked questions: `s-faq`
+- Appendix A: Libraries: `s-libraries`
+- Appendix B: Modernizing code: `s-modernizing`
+- Appendix C: Discussion: `s-discussion`
+  - Define copy, move, and destroy consistently: `sd-consistent`
+- Appendix D: Supporting tools: `s-tools`
+- Glossary: `s-glossary`
+- To-do: Unclassified proto-rules: `s-unclassified`
+- Bibliography: `bibliography`
