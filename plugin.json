@@ -1,0 +1,11 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "cpp-core-guidelines",
+  "version": "0.2646.0",
+  "description": "Review C++ code against the C++ Core Guidelines with build-, host-, and target-aware evidence.",
+  "keywords": [
+    "cpp",
+    "guidelines",
+    "review"
+  ]
+}
